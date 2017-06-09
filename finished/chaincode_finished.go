@@ -19,7 +19,7 @@ package main
 import (
 	"errors"
 	"fmt"
-
+	"encoding/json"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
@@ -40,7 +40,8 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	err := stub.PutState("hello_world", []byte(args[0]))
+	obj, _ := json.Marshal(args)
+	err := stub.PutState("users_list", []byte(string(obj)))
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 // write - invoke function to write key/value pair
 func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, value string
+	var application_id, housing_committee_id, vote string
 	var err error
 	fmt.Println("running write()")
 
@@ -86,9 +87,12 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
 	}
 
-	key = args[0] //rename for funsies
-	value = args[1]
-	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	application_id = args[0]
+	housing_committee_id = args[1]
+	vote = args[2]
+	application_ds := map[string]interface{}{housing_committee_id: vote}
+	obj, _ := json.Marshal(application_ds)
+	err = stub.PutState(application_id, []byte(string(obj))) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
 	}
